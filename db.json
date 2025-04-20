@@ -1,0 +1,26 @@
+{
+  "debitCards": [
+    {
+      "id": "1",
+      "cardDetails": {
+        "userName": "Mark Henry",
+        "cardNumber": ["5647", "3411", "2413", "2020"],
+        "expireDate": "Thru: 12/20",
+        "cvv": "456",
+        "sellingCompany": "Aspire",
+        "cardBrand": "Visa"
+      },
+      "accountBalance": {
+        "amount": 56000,
+        "curreny": "dollar"
+      },
+      "weeklyLimit": {
+        "amountLimit": 20000,
+        "amountSpend": 5678
+      },
+      "cardStatus": {
+        "isFreezed": false
+      }
+    }
+  ]
+}
