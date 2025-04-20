@@ -27,26 +27,29 @@ class NativeSpeechToTextModule(reactContext: ReactApplicationContext) :
 
     private var speechRecognizer: SpeechRecognizer? = null
 
-    init {
-        Handler(Looper.getMainLooper()).post {
-            if (checkPermission()) {
-                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(reactApplicationContext)
-                speechRecognizer?.setRecognitionListener(this)
-            } else {
-                Log.e(NAME, "RECORD_AUDIO permission not granted")
-            }
-        }
-    }
-
     override fun getName() = NAME
 
     override fun startListeningSpeech() {
         Handler(Looper.getMainLooper()).post {
             Log.d(NAME, "Start Listening")
+
+            if (!checkPermission()) {
+                Log.e(NAME, "RECORD_AUDIO permission not granted at startListening")
+                return@post
+            }
+
+            if (speechRecognizer == null) {
+                speechRecognizer = SpeechRecognizer.createSpeechRecognizer(reactApplicationContext)
+                speechRecognizer?.setRecognitionListener(this)
+            }
+
             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            intent.putExtra(
+                RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+            )
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
             intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+
             speechRecognizer?.startListening(intent)
         }
     }
@@ -58,11 +61,11 @@ class NativeSpeechToTextModule(reactContext: ReactApplicationContext) :
         }
     }
 
+
     private fun checkPermission(): Boolean {
         Log.d(NAME, "Check Permission")
         return ActivityCompat.checkSelfPermission(
-            reactApplicationContext,
-            Manifest.permission.RECORD_AUDIO
+            reactApplicationContext, Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
     }
 
@@ -114,16 +117,14 @@ class NativeSpeechToTextModule(reactContext: ReactApplicationContext) :
     private fun sendResultToJS(result: String) {
         val params = Arguments.createMap()
         params.putString("result", result)
-        reactApplicationContext
-            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+        reactApplicationContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
             .emit("onSpeechResults", params)
     }
 
     private fun sendPartialResultToJS(result: String) {
         val params = Arguments.createMap()
         params.putString("partial", result)
-        reactApplicationContext
-            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+        reactApplicationContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
             .emit("onSpeechPartialResults", params)
     }
 
@@ -132,4 +133,5 @@ class NativeSpeechToTextModule(reactContext: ReactApplicationContext) :
         speechRecognizer?.destroy()
         speechRecognizer = null
     }
+
 }

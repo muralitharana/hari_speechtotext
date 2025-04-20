@@ -17,4 +17,5 @@ export type SVGIconsName =
   | 'ToggleOff'
   | 'ToggleOn'
   | 'Weekly'
-  | 'AspireHome';
+  | 'AspireHome'
+  | 'Voice';

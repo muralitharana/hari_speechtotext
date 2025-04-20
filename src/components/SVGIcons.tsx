@@ -22,6 +22,7 @@ import ToggleOff from '../assets/images/toggleoff.svg';
 import Weekly from '../assets/images/weekly.svg';
 import ToggleOn from '../assets/images/toggleon.svg';
 import AspireHome from '../assets/images/AspireHome.svg';
+import Voice from '../assets/images/Voice.svg';
 import {SVGIconsName} from '../types/svgIconsTypes';
 interface SVGIconsProps extends SvgProps {
   iconName: SVGIconsName;
@@ -48,6 +49,7 @@ const iconMap: Record<string, React.FC<SvgProps>> = {
   Weekly,
   ToggleOn,
   AspireHome,
+  Voice,
 };
 
 const SVGIcons: React.FC<SVGIconsProps> = ({

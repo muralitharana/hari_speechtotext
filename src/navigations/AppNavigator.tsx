@@ -14,6 +14,7 @@ import SVGIcons from '../components/SVGIcons';
 import {moderateScale} from '../configs/ScalingSize';
 import SpendingLimit from '../screens/spendingLimit/SpendingLimit';
 import VoiceToText from '../screens/voice/VoiceToText';
+import {Fonts} from '../configs/Fonts';
 
 export type RootStackParamList = {
   [SCREENS.home]: undefined; // No params,
@@ -29,7 +30,9 @@ const TabNavigator = () => (
       headerShown: false,
       tabBarActiveTintColor: Colors.primary,
       tabBarInactiveTintColor: Colors.greyLight,
-      tabBarStyle: {backgroundColor: 'white'},
+      tabBarStyle: {
+        height: 100,
+      },
       tabBarLabelStyle: {
         fontSize: moderateScale(12),
         fontWeight: '600',
@@ -47,41 +50,25 @@ const TabNavigator = () => (
     <Tab.Screen
       options={{
         tabBarIcon: ({focused}) => (
-          <SVGIcons iconName="DebitIcon" focused={focused} />
+          <SVGIcons iconName="Voice" focused={focused} width={40} height={40} />
         ),
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+        },
+        tabBarLabelStyle: {
+          padding: 5,
+          fontFamily: Fonts.fontSemiBold,
+          fontSize: 14,
+        },
+        tabBarLabel: 'Speech',
       }}
       name={SCREENS.voiceToText}
       component={VoiceToText}
     />
-    <Tab.Screen
-      options={{
-        tabBarIcon: ({focused}) => (
-          <SVGIcons iconName="DebitIcon" focused={focused} />
-        ),
-      }}
-      name={SCREENS.debit}
-      component={DebitCardScreen}
-    />
-    <Tab.Screen
-      options={{
-        tabBarIcon: ({focused}) => (
-          <SVGIcons iconName="PaymentIcon" focused={focused} />
-        ),
-      }}
-      name={SCREENS.payments}
-      component={PaymentsScreen}
-    />
-    <Tab.Screen
-      options={{
-        tabBarIcon: ({focused}) => (
-          <SVGIcons iconName="CreditIcon" focused={focused} />
-        ),
-      }}
-      name={SCREENS.credit}
-      component={CreditScreen}
-    />
 
-    <Tab.Screen
+    {/* <Tab.Screen
       options={{
         tabBarIcon: ({focused}) => (
           <SVGIcons iconName="UserIcon" focused={focused} />
@@ -89,7 +76,7 @@ const TabNavigator = () => (
       }}
       name={SCREENS.profile}
       component={ProfileScreen}
-    />
+    /> */}
   </Tab.Navigator>
 );
 
@@ -98,10 +85,9 @@ const AppNavigator = () => (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-      }}
-      initialRouteName="Main">
-      <Stack.Screen name="Main" component={TabNavigator} />
-      <Stack.Screen name={SCREENS.spendingLimit} component={SpendingLimit} />
+      }}>
+      {/* <Stack.Screen name="Main" component={TabNavigator} /> */}
+      <Stack.Screen name={SCREENS.voiceToText} component={VoiceToText} />
       {/* Add other screens as needed */}
     </Stack.Navigator>
   </NavigationContainer>
