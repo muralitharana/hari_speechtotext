@@ -6,4 +6,5 @@ export const SCREENS = {
   profile: 'Profile',
   spendingLimit: 'SpendingLimit',
   voiceToText: 'VoiceToText',
+  settings: 'Settings',
 };

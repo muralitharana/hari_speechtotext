@@ -46,7 +46,7 @@ const useSpeechToText = ({
         errorListener.remove();
       };
     }
-  }, [isPermissionGranted]);
+  }, [isPermissionGranted, handleOnFinalResult]);
 
   return;
 };

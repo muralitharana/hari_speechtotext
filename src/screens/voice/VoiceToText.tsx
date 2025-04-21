@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -6,6 +6,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import {request, PERMISSIONS} from 'react-native-permissions';
@@ -18,11 +19,28 @@ import {Fonts} from '../../configs/Fonts';
 import {Colors} from '../../configs/Colors';
 import FontAwesome from '@react-native-vector-icons/fontawesome6';
 import {moderateScale} from '../../configs/ScalingSize';
+import {useNavigation} from '@react-navigation/native';
+import {SCREENS} from '../../navigations/utils';
+import stringSimilarity from 'string-similarity';
+import {PRACTICE_SENTENCES} from './constants';
+
+// ------------------------
+// Feedback Tag Helper
+// ------------------------
+const getFeedbackTag = (score: number | string) => {
+  const numericScore = typeof score === 'string' ? parseFloat(score) : score;
+
+  if (isNaN(numericScore)) return '';
+
+  if (numericScore > 5) return '😮 Wow, that was amazing!';
+  if (numericScore >= 4) return '🔥 Great!';
+  if (numericScore >= 3) return '💡 Needs Improvement';
+  return '🗣️ Please keep practicing!';
+};
 
 const VoiceToText = () => {
-  // ------------------------
-  // State Management
-  // ------------------------
+  const navigation = useNavigation();
+
   const [partialResult, setPartialResult] = useState<string | null>(null);
   const [finalResult, setFinalResult] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
@@ -32,33 +50,33 @@ const VoiceToText = () => {
   const initialState = {
     isLoading: false,
     text: '',
-    score: 0,
+    score: '',
   };
 
   const [generatedWordString, setGeneratedString] = useState(initialState);
 
-  // ------------------------
-  // Speech Recognition Hook
-  // ------------------------
+  const handleFinalResult = useCallback(
+    (event: {result: React.SetStateAction<string | null>}) => {
+      const result = String(event.result).toLowerCase();
+      const target = generatedWordString.text.toLowerCase();
+      console.log({result, target});
+      setFinalResult(event.result);
+      setIsListening(false); // Auto-stop UI toggle
+      const score = stringSimilarity.compareTwoStrings(target, result);
+      setGeneratedString(prev => ({
+        ...prev,
+        score: ((score * 10) / 2).toFixed(2),
+      }));
+    },
+    [generatedWordString.text],
+  );
+
   useSpeechToText({
     handleOnPartialResult(event) {
       setPartialResult(event.partial);
       console.log('Partial:', event.partial);
     },
-    handleOnFinalResult(event) {
-      const result = String(event.result).toLowerCase();
-      const target = generatedWordString.text.toLowerCase();
-
-      setFinalResult(event.result);
-      setIsListening(false); // Auto-stop UI toggle
-
-      setGeneratedString(prev => ({
-        ...prev,
-        score: result === target ? 5 : 0,
-      }));
-
-      console.log('Final:', event.result);
-    },
+    handleOnFinalResult: handleFinalResult,
     handleError(event) {
       console.error('Speech error:', event);
       setIsListening(false);
@@ -66,9 +84,6 @@ const VoiceToText = () => {
     isPermissionGranted,
   });
 
-  // ------------------------
-  // Speech Control
-  // ------------------------
   const startListening = () => {
     request(PERMISSIONS.ANDROID.RECORD_AUDIO).then(status => {
       console.log(status);
@@ -77,6 +92,7 @@ const VoiceToText = () => {
       setFinalResult(null);
       setPartialResult(null);
       setIsListening(true);
+      setGeneratedString(prev => ({...prev, score: ''}));
     });
   };
 
@@ -85,26 +101,28 @@ const VoiceToText = () => {
     setIsListening(false);
   };
 
-  // ------------------------
-  // Generate Practice Word
-  // ------------------------
   const handleGenerateString = async () => {
-    setGeneratedString(prev => ({...prev, isLoading: true}));
+    setGeneratedString(prev => ({...prev, isLoading: true, score: ''}));
 
-    const res: string = await new Promise(resolve =>
-      setTimeout(() => resolve('Hello world'), 3000),
-    );
+    const randomSentence =
+      PRACTICE_SENTENCES[Math.floor(Math.random() * PRACTICE_SENTENCES.length)];
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     setGeneratedString(prev => ({
       ...prev,
       isLoading: false,
-      text: res,
+      text: randomSentence,
+      score: '',
     }));
+    setFinalResult('');
+    setPartialResult('');
   };
 
-  // ------------------------
-  // Render UI
-  // ------------------------
+  function handleSetting() {
+    navigation.navigate(SCREENS.settings as never);
+  }
+
   const renderContent = () => {
     const {text, score, isLoading} = generatedWordString;
 
@@ -113,16 +131,33 @@ const VoiceToText = () => {
         <View style={styles.contentContainer}>
           <View style={styles.header}>
             <Text style={styles.title}>Score your speech</Text>
-            <FontAwesome
-              name={'gear'}
-              iconStyle="solid"
-              color={'white'}
-              size={moderateScale(20)}
-            />
+            {/* <TouchableOpacity onPress={handleSetting}>
+              <FontAwesome
+                name={'gear'}
+                iconStyle="solid"
+                color={'white'}
+                size={moderateScale(20)}
+              />
+            </TouchableOpacity> */}
           </View>
 
           <View style={styles.promptBox}>
-            <Text style={styles.result}>Say: {text}</Text>
+            {text && (
+              <>
+                <Text style={[styles.result, {fontSize: 14}]}>
+                  Your target sentence
+                </Text>
+                <Text style={styles.result}>{text}</Text>
+              </>
+            )}
+          </View>
+
+          <View style={[styles.promptBox]}>
+            {(finalResult || partialResult) && (
+              <Text style={[styles.result, {color: Colors.primary}]}>
+                {finalResult || partialResult}
+              </Text>
+            )}
           </View>
 
           {isLoading && (
@@ -132,22 +167,30 @@ const VoiceToText = () => {
                 style={styles.loaderImage}
                 resizeMode="cover"
               />
-
               <Text style={styles.loadingText}>Generating content</Text>
             </View>
           )}
 
           {!!score && (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-              <Text style={styles.scoreText}>{score} </Text>
-              <Text style={{fontSize: 30, fontFamily: Fonts.fontSemiBold}}>
-                /{score}
-              </Text>
+            <View style={{alignItems: 'center', marginVertical: 20}}>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.scoreText}>{score}</Text>
+                <Text style={{fontSize: 30, fontFamily: Fonts.fontSemiBold}}>
+                  /5
+                </Text>
+              </View>
+              <Text style={styles.feedbackText}>{getFeedbackTag(score)}</Text>
+            </View>
+          )}
+
+          {isListening && (
+            <View style={styles.loaderContainer}>
+              <Image
+                source={require('../../assets/images/voice.gif')}
+                style={styles.loaderImage}
+                resizeMode="cover"
+              />
+              <Text style={styles.loadingText}>Speak with confidence</Text>
             </View>
           )}
 
@@ -261,7 +304,6 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'flex-start',
     backgroundColor: Colors.greyExtraLight,
-    borderRadius: 20,
   },
   result: {
     fontSize: 20,
@@ -273,7 +315,14 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.fontBold,
     fontSize: 70,
     textAlign: 'center',
-    marginVertical: 20,
+    marginRight: 5,
+  },
+  feedbackText: {
+    fontSize: 18,
+    fontFamily: Fonts.fontSemiBold,
+    color: Colors.primary,
+    marginTop: 10,
+    textAlign: 'center',
   },
   introContainer: {
     flex: 1,

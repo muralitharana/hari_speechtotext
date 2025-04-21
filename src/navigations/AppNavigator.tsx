@@ -15,6 +15,7 @@ import {moderateScale} from '../configs/ScalingSize';
 import SpendingLimit from '../screens/spendingLimit/SpendingLimit';
 import VoiceToText from '../screens/voice/VoiceToText';
 import {Fonts} from '../configs/Fonts';
+import Setting from '../screens/settings/Setting';
 
 export type RootStackParamList = {
   [SCREENS.home]: undefined; // No params,
@@ -88,6 +89,7 @@ const AppNavigator = () => (
       }}>
       {/* <Stack.Screen name="Main" component={TabNavigator} /> */}
       <Stack.Screen name={SCREENS.voiceToText} component={VoiceToText} />
+      <Stack.Screen name={SCREENS.settings} component={Setting} />
       {/* Add other screens as needed */}
     </Stack.Navigator>
   </NavigationContainer>
